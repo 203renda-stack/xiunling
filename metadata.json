@@ -1,0 +1,7 @@
+{
+  "name": "XinLing (心灵) - AI Mental Companion",
+  "description": "A warm, anonymous, and always-available mental health companion powered by Gemini AI. Offers empathetic chat, mood tracking, and crisis resources.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
