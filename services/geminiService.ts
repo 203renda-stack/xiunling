@@ -1,25 +1,5 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { Message } from "../types";
-
-// Safety settings to prevent harmful content while allowing discussion of mental health
-const SAFETY_SETTINGS = [
-  {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-  {
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-  },
-];
 
 const SYSTEM_INSTRUCTION = `
 You are "XinLing" (心灵), a professional and empathetic AI mental health companion designed for Chinese users (adults and teens).
@@ -56,8 +36,10 @@ const getClient = () => {
   if (!aiClient) {
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      console.error("API_KEY is missing!");
-      throw new Error("API Key is missing");
+      console.error("API_KEY is missing from environment variables!");
+      // We throw a specific error text that we can catch and show to the user if needed,
+      // or simply let the sendMessage function handle it.
+      throw new Error("MISSING_API_KEY");
     }
     aiClient = new GoogleGenAI({ apiKey });
   }
@@ -99,8 +81,17 @@ export const sendMessageToGemini = async (
     }
 
     return responseText;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
+    
+    if (error.message.includes("MISSING_API_KEY")) {
+        return "⚠️ 系统错误：未检测到 API Key。请在 Vercel 后台设置环境变量 API_KEY。";
+    }
+
+    if (error.message.includes("403") || error.toString().includes("API key not valid")) {
+        return "⚠️ 系统错误：API Key 无效。请检查 Vercel 后台的环境变量设置。";
+    }
+
     return "我现在连接有点不稳定，请稍后再试。如果你需要紧急帮助，请务必拨打 12355。🧡";
   }
 };
